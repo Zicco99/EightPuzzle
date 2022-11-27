@@ -19,8 +19,10 @@ public class EightBoard extends JFrame{
     private void initComponents() {
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.setLayout(new GridLayout(2, 1, 3, 3));
-        this.add(new ControlPanel());
-        this.add(new BoardGrid());
+        ControlPanel cp = new ControlPanel();
+        BoardGrid board = new BoardGrid();
+        this.add(board);
+        this.add(cp);
         this.pack();
     }
 

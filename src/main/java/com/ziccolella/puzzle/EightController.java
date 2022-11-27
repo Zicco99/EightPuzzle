@@ -12,7 +12,11 @@ import javax.swing.JLabel;
 
 import com.ziccolella.puzzle.Events_and_Listeners.*;
 
-//This buddy must check if a move is legal or not
+//This buddy implemens the logic:
+//Receives an veto move event when a tile is clicked 
+//Checks if it is a valid move 
+//Send move update event to all tiles (each tile once received the move will change its state only if it is involved) 
+
 public class EightController extends JLabel implements VetoableChangeListener{
     private static final int ROWS = 3;
     private static final int COLS = 3;
@@ -59,11 +63,8 @@ public class EightController extends JLabel implements VetoableChangeListener{
     public void vetoableChange(PropertyChangeEvent e){
         if(e.getPropertyName()=="VETO_MOVE_EVENT"){
 
-            System.out.println("I'm the controller, lemme check, one sec");
-            System.out.println("First, i need to check if clicked tile is adiancent to the hole (the one that has 9 as label)");
-
             EightTile clicked_tile = (EightTile)e.getSource();//The clicked tile can be taken by the event
-            EightTile hole_tile = tiles.get(current_conf.indexOf(e.getNewValue()));//The hole tile can be taken by the local structure
+            EightTile hole_tile = tiles.get(current_conf.indexOf(e.getNewValue()));//The hole tile can be taken by the local cache (current_conf)
 
             int c_pos = clicked_tile.getPosition();
             int h_pos = hole_tile.getPosition();
@@ -83,18 +84,14 @@ public class EightController extends JLabel implements VetoableChangeListener{
                 int possible_move_p = c_pos + d.x + d.y*COLS;
                 if (h_pos == possible_move_p) {
 
-                    System.out.println("Ok, go on");
-                    System.out.println(current_conf);
+                    //Update cache structure
                     Collections.swap(current_conf,current_conf.indexOf(e.getOldValue()),current_conf.indexOf(e.getNewValue()));
-                    System.out.println(current_conf);
-
                     //Send all tiles the changement (Broadcast)
                     this.firePropertyChange("LABEL_UPDATE_EVENT",e.getNewValue(), e.getOldValue());
                     this.setText("OK");
                     return;
                 }
             }
-            System.out.println("Nah,hole is not adiancent");
             this.setText("KO");
         }
     }
@@ -105,7 +102,8 @@ public class EightController extends JLabel implements VetoableChangeListener{
         Integer[] l = {1,2,3,4,5,6,7,8,9};
         int temp;
     
-        //SHUFFLE
+        //TO DO : SHUFFLE DOING n RANDOM MOVES STARTING FROM STARTING CONFIGURATION
+
         for (int i = 0; i < 1000; i++) {
             int a = ThreadLocalRandom.current().nextInt(0,9);
             int b = ThreadLocalRandom.current().nextInt(0,9);
@@ -122,10 +120,9 @@ public class EightController extends JLabel implements VetoableChangeListener{
     }
 
     public void flip(java.awt.event.ActionEvent e){
+        //TO DO : IMPLEMENT FLIP
 
     }
-
-    //Restart Event implementation
 
     public synchronized void addEightRestartListener(EightRestart.Listener l) {
         restart_listeners.add(l);
