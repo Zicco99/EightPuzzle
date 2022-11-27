@@ -2,73 +2,66 @@ package com.ziccolella.puzzle;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.beans.PropertyChangeSupport;
 import java.beans.PropertyVetoException;
-import java.beans.VetoableChangeListener;
-import java.beans.VetoableChangeSupport;
 
 import javax.swing.JButton;
 import com.ziccolella.puzzle.Events_and_Listeners.EightRestart;
 
 public class EightTile extends JButton implements EightRestart.Listener,PropertyChangeListener{
-    final int position; //It's a constant
-    int label; //It's a Bound and Constrained property
+  //By analysing stacktrace and source code i discovered that is not necessary to initialize property veto and change supports
+  //as JBUTTON and other JComponents initialize them in their costructors, so a super() call is enough;
 
-    protected PropertyChangeSupport mPcs = new PropertyChangeSupport(this);
-    protected VetoableChangeSupport mVcs = new VetoableChangeSupport(this);
+  int position; //It's a constant
+  boolean position_has_been_initialized;
+  int label; //It's a Bound and Constrained property
 
+  //Constructors must have 0 parameters constructors 
+  public EightTile(){
+    super(); //
+    this.addActionListener(e -> { try { super.fireVetoableChange("check_move",this.label,9); } catch (PropertyVetoException ev){}});
+    position_has_been_initialized = false;
+  }
 
-    public EightTile(int pos){
-        super();
-        this.position = pos;
+  public void setPosition(int p){
+    if (!position_has_been_initialized){
+      this.position = p;
+      position_has_been_initialized=true;
     }
+  }
 
-    public int getPosition(){ // getter
-		return position;
-    }      
+  public int getPosition(){ // getter
+  return this.position;
+  }      
 
-    public String getLabel(){ // getter
-		return Integer.toString(label);
-    }
+  public String getLabel(){ // getter
+  return Integer.toString(label);
+  }
 
-    public void setLabel(int new_label) throws PropertyVetoException{  // setter
-        System.out.println("Hum, Lemme ask to controller");
-        this.mVcs.fireVetoableChange("label",this.label,new_label);
-        System.out.println(new_label + " -> " + this.label );
-        this.label = new_label;
-        this.mPcs.firePropertyChange("label",this.label,new_label);
-    }
+  @Override
+  public void restart(EightRestart.Event e) {
+      this.label = e.payload.get(position);
+      this.setText(this.getLabel());
+  }
 
-    @Override
-    public void restart(EightRestart.Event e) {
-        label = e.payload.get(position);
-        this.setText(Integer.toString(label));
-        if(label==9) this.setEnabled(false);
-        else this.setEnabled(true);
-    }
+  @Override
+  public void propertyChange(PropertyChangeEvent e) {
+    if(e.getPropertyName()=="label_update"){
 
-    @Override
-    public void propertyChange(PropertyChangeEvent e) {
-      System.out.println(e.getNewValue());
-      System.out.println(e.getOldValue());
+      System.out.println(e.getNewValue() + " "+ e.getOldValue());
+
+      if((Integer)e.getNewValue()==this.label){
+        System.out.println("Hello from position " + this.getPosition());
+        System.out.println(label + " -> " + e.getOldValue());
+        this.label = (Integer)e.getOldValue();
+        this.setText(this.getLabel());
+      }
+      if((Integer)e.getOldValue()==this.label){
+        System.out.println("Hello from position " + this.getPosition());
+        System.out.println(label + " -> " + e.getNewValue());
+        this.label = (Integer)e.getNewValue();
+        this.setText(this.getLabel());
+      }
       
     }
-
-    public synchronized void addPropertyChangeListener(PropertyChangeListener l) {
-      if (mPcs==null) mPcs = new PropertyChangeSupport(this);
-      mPcs.addPropertyChangeListener(l);
-    }
-    
-    public synchronized void removePropertyChangeListener(PropertyChangeListener l) {
-      mPcs.removePropertyChangeListener(l);
-    }
-
-    public synchronized void addVetoableChangeListener(VetoableChangeListener l) {
-      if (mVcs==null) mVcs = new VetoableChangeSupport(this);
-      mVcs.addVetoableChangeListener(l);
-    }
-
-    public synchronized void removeVetoableChangeListener(VetoableChangeListener l) {
-      mVcs.removeVetoableChangeListener(l);
-    }
+  }
 }
