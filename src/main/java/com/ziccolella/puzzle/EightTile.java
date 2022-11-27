@@ -18,7 +18,7 @@ public class EightTile extends JButton implements EightRestart.Listener,Property
   //Constructors must have 0 parameters constructors 
   public EightTile(){
     super(); //
-    this.addActionListener(e -> { try { super.fireVetoableChange("check_move",this.label,9); } catch (PropertyVetoException ev){}});
+    this.addActionListener(e -> { try { super.fireVetoableChange("VETO_MOVE_EVENT",this.label,9); } catch (PropertyVetoException ev){}});
     position_has_been_initialized = false;
   }
 
@@ -37,29 +37,27 @@ public class EightTile extends JButton implements EightRestart.Listener,Property
   return Integer.toString(label);
   }
 
+  public void setLabel(int lab){ // getter
+    this.label = lab;
+    this.setText(this.getLabel());
+    if(label==9) this.setEnabled(false);
+    else this.setEnabled(true);
+  }
+
   @Override
   public void restart(EightRestart.Event e) {
-      this.label = e.payload.get(position);
-      this.setText(this.getLabel());
+    this.setLabel(e.payload.get(position));
   }
 
   @Override
   public void propertyChange(PropertyChangeEvent e) {
-    if(e.getPropertyName()=="label_update"){
-
-      System.out.println(e.getNewValue() + " "+ e.getOldValue());
+    if(e.getPropertyName()=="LABEL_UPDATE_EVENT"){
 
       if((Integer)e.getNewValue()==this.label){
-        System.out.println("Hello from position " + this.getPosition());
-        System.out.println(label + " -> " + e.getOldValue());
-        this.label = (Integer)e.getOldValue();
-        this.setText(this.getLabel());
+        setLabel((Integer)e.getOldValue());
       }
-      if((Integer)e.getOldValue()==this.label){
-        System.out.println("Hello from position " + this.getPosition());
-        System.out.println(label + " -> " + e.getNewValue());
-        this.label = (Integer)e.getNewValue();
-        this.setText(this.getLabel());
+      else if((Integer)e.getOldValue()==this.label){
+        setLabel((Integer)e.getNewValue());
       }
       
     }

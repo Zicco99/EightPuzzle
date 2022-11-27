@@ -52,11 +52,12 @@ public class EightController extends JLabel implements VetoableChangeListener{
         //Controller sends the event to the tile
         this.addPropertyChangeListener(t);
         this.addEightRestartListener(t);
+        System.out.println("lol");
     }
 
     //Veto implementation
     public void vetoableChange(PropertyChangeEvent e){
-        if(e.getPropertyName()=="check_move"){
+        if(e.getPropertyName()=="VETO_MOVE_EVENT"){
 
             System.out.println("I'm the controller, lemme check, one sec");
             System.out.println("First, i need to check if clicked tile is adiancent to the hole (the one that has 9 as label)");
@@ -81,11 +82,15 @@ public class EightController extends JLabel implements VetoableChangeListener{
             for (Direction d : allowed_moves.values()) {
                 int possible_move_p = c_pos + d.x + d.y*COLS;
                 if (h_pos == possible_move_p) {
+
                     System.out.println("Ok, go on");
                     System.out.println(current_conf);
                     Collections.swap(current_conf,current_conf.indexOf(e.getOldValue()),current_conf.indexOf(e.getNewValue()));
                     System.out.println(current_conf);
-                    this.firePropertyChange("label_update",e.getNewValue(), e.getOldValue());
+
+                    //Send all tiles the changement (Broadcast)
+                    this.firePropertyChange("LABEL_UPDATE_EVENT",e.getNewValue(), e.getOldValue());
+                    this.setText("OK");
                     return;
                 }
             }
@@ -110,8 +115,6 @@ public class EightController extends JLabel implements VetoableChangeListener{
         } 
         
         current_conf = new ArrayList<Integer>(Arrays.asList(l));
-    
-        EightTile hole_tile = tiles.get(current_conf.indexOf(9));
 
         this.setText("RESETTED");
     
