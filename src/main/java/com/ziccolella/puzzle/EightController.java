@@ -1,5 +1,7 @@
 package com.ziccolella.puzzle;
 
+import java.awt.Color;
+import java.awt.Font;
 import java.beans.PropertyChangeEvent;
 import java.beans.VetoableChangeListener;
 import java.util.ArrayList;
@@ -9,6 +11,7 @@ import java.util.HashMap;
 import java.util.concurrent.ThreadLocalRandom;
 
 import javax.swing.JLabel;
+import javax.swing.SwingConstants;
 
 import com.ziccolella.puzzle.Events_and_Listeners.*;
 
@@ -17,16 +20,16 @@ import com.ziccolella.puzzle.Events_and_Listeners.*;
 //Checks if it is a valid move 
 //Send move update event to all tiles (each tile once received the move will change its state only if it is involved) 
 
-public class EightController extends JLabel implements VetoableChangeListener{
+public class EightController extends JLabel implements VetoableChangeListener {
     private static final int ROWS = 3;
     private static final int COLS = 3;
 
     private ArrayList<EightRestart.Listener> restart_listeners = new ArrayList<>();
-    public ArrayList<EightTile> tiles = new ArrayList<>();
+    private ArrayList<EightTile> tiles = new ArrayList<>();
     private ArrayList<Integer> current_conf;
-    private HashMap<String,Direction> moves;
+    private HashMap<String, Direction> moves;
 
-    public class Direction{
+    public class Direction {
         final int x;
         final int y;
 
@@ -38,57 +41,74 @@ public class EightController extends JLabel implements VetoableChangeListener{
 
     public EightController() {
         this.setText("START");
-        moves = new HashMap<String,Direction>();
-        moves.put("left",new Direction(-1, 0));
-        moves.put("right",new Direction(1, 0));
-        moves.put("up",new Direction(0, -1));
-        moves.put("down",new Direction(0, 1));
+        this.setHorizontalAlignment(SwingConstants.CENTER);
+        this.setFont(new Font("Arial", Font.PLAIN, 15));
+        this.setForeground(Color.WHITE);
+
+        moves = new HashMap<String, Direction>();
+        moves.put("left", new Direction(-1, 0));
+        moves.put("right", new Direction(1, 0));
+        moves.put("up", new Direction(0, -1));
+        moves.put("down", new Direction(0, 1));
     }
 
-    public void add_tile(EightTile t){
-
-        //Save reference to the tile
+    public void add_tile(EightTile t) {
+        // Save reference to the tile
         tiles.add(t);
 
-        //Tile sends the event to the controller
+        // Tile sends the event to the controller (veto_event)
         t.addVetoableChangeListener(this);
 
-        //Controller sends the event to the tile
-        this.addPropertyChangeListener(t);
-        this.addEightRestartListener(t);
-        System.out.println("lol");
+        // Controller sends event to the tile
+        this.addPropertyChangeListener(t); // (tile_event_update)
+        this.addEightRestartListener(t); // (restart)
     }
 
-    //Veto implementation
-    public void vetoableChange(PropertyChangeEvent e){
-        if(e.getPropertyName()=="VETO_MOVE_EVENT"){
+    // Veto implementation
+    public void vetoableChange(PropertyChangeEvent e) {
+        if (e.getPropertyName() == "VETO_MOVE_EVENT" || e.getPropagationId() == this) {
 
-            EightTile clicked_tile = (EightTile)e.getSource();//The clicked tile can be taken by the event
-            EightTile hole_tile = tiles.get(current_conf.indexOf(e.getNewValue()));//The hole tile can be taken by the local cache (current_conf)
+            EightTile clicked_tile = (EightTile) e.getSource();// The clicked tile can be taken by the event
+            EightTile hole_tile = tiles.get(current_conf.indexOf(e.getNewValue()));// The hole tile can be taken by the
+                                                                                   // local cache (current_conf)
 
             int c_pos = clicked_tile.getPosition();
             int h_pos = hole_tile.getPosition();
 
-            //Using the position exclude moves not allowed 
-            HashMap<String,Direction> allowed_moves = new HashMap<>();
+            // Using the position exclude moves not allowed
+            HashMap<String, Direction> allowed_moves = new HashMap<>();
             allowed_moves.putAll(moves);
 
-            if(c_pos<=COLS*1) allowed_moves.remove("up"); //if c_pos is in first row exclude up move
-            if(c_pos>COLS*(ROWS-1)) allowed_moves.remove("down"); //if c_pos is in last row exclude down move
+            if (c_pos < COLS * 1)
+                allowed_moves.remove("up"); // if c_pos is in first row exclude up move
+            if (c_pos >= COLS * (ROWS - 1))
+                allowed_moves.remove("down"); // if c_pos is in last row exclude down move
 
-            if(c_pos%COLS==0) allowed_moves.remove("left"); //if c_pos is in first column row exclude left move
-            if(c_pos%COLS==2) allowed_moves.remove("right"); //if c_pos is in last last column exclude right move
+            if (c_pos % COLS == 0)
+                allowed_moves.remove("left"); // if c_pos is in first column row exclude left move
+            if (c_pos % COLS == COLS - 1)
+                allowed_moves.remove("right"); // if c_pos is in last last column exclude right move
 
-            //Check if hole is adacient and reachable
+            // Check if hole is adacient and reachable
             for (Direction d : allowed_moves.values()) {
-                int possible_move_p = c_pos + d.x + d.y*COLS;
+                int possible_move_p = c_pos + d.x + d.y * COLS;
                 if (h_pos == possible_move_p) {
 
-                    //Update cache structure
-                    Collections.swap(current_conf,current_conf.indexOf(e.getOldValue()),current_conf.indexOf(e.getNewValue()));
-                    //Send all tiles the changement (Broadcast)
-                    this.firePropertyChange("LABEL_UPDATE_EVENT",e.getNewValue(), e.getOldValue());
+                    // Update cache structure
+                    Collections.swap(current_conf, current_conf.indexOf(e.getOldValue()),current_conf.indexOf(e.getNewValue()));
+                    // Send all tiles the changement (Broadcast)
+                    this.firePropertyChange("LABEL_UPDATE_EVENT", e.getNewValue(), e.getOldValue());
                     this.setText("OK");
+
+                    //if the move has been done by the player
+                    if(e.getPropagationId() != this){
+                        for(EightTile tile : tiles){
+                            if(tile.label!=9 && tile.getBackground()!=Color.GREEN){ //If all tiles are green , 9 not included -> player won.
+                                return;
+                            }
+                        }
+                    }
+                    this.setText("YOU WON :)");
                     return;
                 }
             }
@@ -96,51 +116,64 @@ public class EightController extends JLabel implements VetoableChangeListener{
         }
     }
 
+    public void restart() {
+        // Initialize the array of labels
+        current_conf = new ArrayList<>(Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9));
 
-    public void restart(){
-        //Initialize the array of labels
-        Integer[] l = {1,2,3,4,5,6,7,8,9};
-        int temp;
-    
-        //TO DO : SHUFFLE DOING n RANDOM MOVES STARTING FROM STARTING CONFIGURATION
+        // Propagate reset conf to tiles
+        restart_listeners.forEach(
+                (EightRestartListener) -> EightRestartListener.restart(new EightRestart.Event(this, current_conf)));
 
-        for (int i = 0; i < 1000; i++) {
-            int a = ThreadLocalRandom.current().nextInt(0,9);
-            int b = ThreadLocalRandom.current().nextInt(0,9);
-            temp = l[a];
-            l[a] = l[b];
-            l[b] = temp;
-        } 
-        
-        current_conf = new ArrayList<Integer>(Arrays.asList(l));
+        // Let's exploit the already written code,
+        // we are gonna simulate multiple click tile events
+        // (Veto algorithm will discard wrong one)
+        // in order to shuffle the board
+        for (int z = 0; z < 100000; z++) {
+            int sim = ThreadLocalRandom.current().nextInt(0, 9);
+            // Simulted ev, PropagationID has been released for future use, even if it's
+            // usally by some projects to identify a event stream,
+            // he we will use it to identify this call as a special event 
+            PropertyChangeEvent ev = new PropertyChangeEvent(tiles.get(sim), "VETO_MODE_EVENT", sim, 9);
+            ev.setPropagationId(this);
+            vetoableChange(ev);
+        }
 
         this.setText("RESETTED");
-    
-        restart_listeners.forEach((EightRestartListener) -> EightRestartListener.restart(new EightRestart.Event(this,current_conf)));
     }
 
-    public void flip(java.awt.event.ActionEvent e){
-        //TO DO : IMPLEMENT FLIP
+    public void flip(java.awt.event.ActionEvent e) {
+        this.setText("CHECK CODE :)");
+        //Don't need the flip function, this game is deterministic and each action or sequence of actions is reversible.
+        //This way of shuffling, doing a sequence of actions starting from the solution (X) to reach conf (Y),
+        //ensure us that by doing the same sequence reversed we will obtain (X), the solution.
+    }
 
+    //Utility function
+    public boolean check_solvable() {
+        int inv = 0;
+        for (int i = 0; i < current_conf.size() - 1; i++) {
+            for (int j = i + 1; j < current_conf.size(); j++) {
+                if (current_conf.get(i) > current_conf.get(i))
+                    inv++;
+            }
+        }
+        return inv % 2 == 0;
     }
 
     public synchronized void addEightRestartListener(EightRestart.Listener l) {
         restart_listeners.add(l);
     }
-    
+
     public synchronized void removeEightRestartListener(EightRestart.Listener l) {
         restart_listeners.remove(l);
     }
-    
 
-    
-    /* DOCUMENTATION USEFUL TO UNDERSTAND WHAT HAPPENED:
+    /*
+     * DOCUMENTATION USEFUL:
      * A "PropertyChange" event gets delivered whenever a bean changes a "bound" or
      * "constrained" property.
      * A PropertyChangeEvent object is sent as an argument to the
      * PropertyChangeListener and VetoableChangeListener methods.
-     * Normally PropertyChangeEvents are accompanied by the name and the old and new
-     * value of the changed property.
      * If the new value is a primitive type (such as int or boolean) it must be
      * wrapped as the corresponding java.lang.* Object type (such as Integer or
      * Boolean).
