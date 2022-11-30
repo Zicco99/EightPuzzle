@@ -20,7 +20,7 @@ public class EightTile extends JButton implements EightRestart.Listener,Property
 
   int label; //It's a Bound and Constrained property
 
-  //Constructors must have 0 parameters constructors 
+  //As Constructors must have 0 parameters constructors 
   public EightTile(){
     super();
 
@@ -35,22 +35,22 @@ public class EightTile extends JButton implements EightRestart.Listener,Property
     position_has_been_initialized = false;
   }
 
-  public int getPosition(){ // getter
+  public int getPosition(){
     return this.position;
     }      
 
-  public void setPosition(int p){ //setter
+  public void setPosition(int p){ 
     if (!position_has_been_initialized){
       this.position = p;
       position_has_been_initialized=true;
     }
   }
 
-  public String getLabel(){ // getter
+  public String getLabel(){ 
   return Integer.toString(label);
   }
 
-  public void setLabel(int lab){ // setter 
+  public void setLabel(int lab){  
     this.label = lab;
     this.setText(this.getLabel());
     if(label==9){

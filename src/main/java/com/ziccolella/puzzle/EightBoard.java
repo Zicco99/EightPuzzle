@@ -43,11 +43,10 @@ public class EightBoard extends JFrame{
 
             //From docu parameters are (int rows, int cols, int hgap, int vgap)
             this.setLayout(new GridLayout(ROWS,COLS,0,0));
-            //Initialize tiles
+
             for (int row = 0; row < ROWS; row++) {
                 for (int col = 0; col < COLS; col++) {
 
-                    //Create Eightile
                     EightTile tile = new EightTile();
                     tile.setPosition((row*COLS)+col);
 
@@ -55,7 +54,7 @@ public class EightBoard extends JFrame{
                     controller.add_tile(tile);
 
                     //Add to the GUI
-                    add(tile);
+                    this.add(tile);
                 }
             }
 

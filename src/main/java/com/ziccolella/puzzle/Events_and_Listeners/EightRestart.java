@@ -5,7 +5,7 @@ import java.util.EventListener;
 import java.util.EventObject;
 
 /**
- * Event + listener implementation to allow player to reset the game.
+ * Event + listener implementation that allows player to reset the game.
  * @author zicco
  */
 
@@ -27,6 +27,5 @@ public class EightRestart{
     
     }
 
-    
 
 }

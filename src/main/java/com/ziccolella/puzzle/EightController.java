@@ -15,10 +15,10 @@ import javax.swing.SwingConstants;
 
 import com.ziccolella.puzzle.Events_and_Listeners.*;
 
-//This buddy implemens the logic:
+//This buddy implements the logic:
 //Receives an veto move event when a tile is clicked 
-//Checks if it is a valid move 
-//Send move update event to all tiles (each tile once received the move will change its state only if it is involved) 
+//Checks if it is a valid move sends a move update event to all tiles
+//(each tile once received the move will change its state only if it is involved) 
 
 public class EightController extends JLabel implements VetoableChangeListener {
     private static final int ROWS = 3;
@@ -129,7 +129,12 @@ public class EightController extends JLabel implements VetoableChangeListener {
         // (Veto algorithm will discard wrong one)
         // in order to shuffle the board
         for (int z = 0; z < 100000; z++) {
+
+            //Here the number of tiles that grant a valid move is much smaller of [0,9] and depends on the 
+            //current hole position as well as the psedurandomic function -> a better function will grant a
+            //better shuffle.
             int sim = ThreadLocalRandom.current().nextInt(0, 9);
+
             // Simulted ev, PropagationID has been released for future use, even if it's
             // usally by some projects to identify a event stream,
             // he we will use it to identify this call as a special event 
@@ -167,17 +172,4 @@ public class EightController extends JLabel implements VetoableChangeListener {
     public synchronized void removeEightRestartListener(EightRestart.Listener l) {
         restart_listeners.remove(l);
     }
-
-    /*
-     * DOCUMENTATION USEFUL:
-     * A "PropertyChange" event gets delivered whenever a bean changes a "bound" or
-     * "constrained" property.
-     * A PropertyChangeEvent object is sent as an argument to the
-     * PropertyChangeListener and VetoableChangeListener methods.
-     * If the new value is a primitive type (such as int or boolean) it must be
-     * wrapped as the corresponding java.lang.* Object type (such as Integer or
-     * Boolean).
-     * Null values may be provided for the old and the new values if their true
-     * values are not known.
-     */
 }
